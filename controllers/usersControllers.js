@@ -76,12 +76,11 @@ export async function getSummaery(req, res) {
   receipts = receipts.filter(
     (r) => r.userName == req.params.username
   );
-  const tickets = receipts.reduce((accumulator, r) => {
-  return accumulator + r.ticketsBought;})
-  const averageTicketsPerEvent = tickets / receipts.length
+  const tickets = receipts.reduce((accumulator, r) => accumulator + r.ticketsBought,0)
+  const averageTicketsPerEvent = tickets  / receipts.length
   res.json({
     totalTicketsBought: receipts.length,
     events: receipts.map((e) => e.eventName),
-    averageTicketsPerEvent,
+    averageTicketsPerEvent
   });
 }
