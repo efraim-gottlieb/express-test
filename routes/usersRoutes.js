@@ -7,4 +7,7 @@ router.route("/register")
 
 router.route("/tickets/buy")
   .post(usersController.buyTickets)
+
+router.route("/:username/summary")
+  .get(usersController.getSummaery)
 export default router;

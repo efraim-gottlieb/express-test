@@ -1,6 +1,7 @@
 import { readUsers, writeUsers } from "../utils/usersUtils.js";
 import { createReceipt } from "../controllers/receiptsControllers.js";
-import {readEvents} from "../utils/eventsUtils.js";
+import { readEvents, writeEvents } from "../utils/eventsUtils.js";
+import { readReceipts } from "../utils/receiptsUtils.js";
 
 async function validateUser(username, password) {
   const users = await readUsers();
@@ -50,12 +51,37 @@ export async function buyTickets(req, res) {
     res.json({ error: "denied" });
     return;
   }
-  const events = await readEvents()
+  const events = await readEvents();
   const eventsNames = events.map((e) => e.eventName.toLowerCase());
   if (!eventsNames.includes(eventName.toLowerCase())) {
     res.status(400).send("Event not exist!");
     return;
   }
+  const eventIndex = events.findIndex(
+    (e) => e.eventName.toLowerCase() === eventName.toLowerCase()
+  );
+  if (events[eventIndex]["ticketsForSale"] < quantity) {
+    res.status(400).json({ error: "not enough tickets" });
+    return;
+  }
+  events[eventIndex]["ticketsForSale"] -= quantity;
+  writeEvents(events);
+
   createReceipt(username, eventName, quantity);
   res.json({ message: "Tickets purchased successfully" });
+}
+
+export async function getSummaery(req, res) {
+  let receipts = await readReceipts()
+  receipts = receipts.filter(
+    (r) => r.userName == req.params.username
+  );
+  const tickets = receipts.reduce((accumulator, r) => {
+  return accumulator + r.ticketsBought;})
+  const averageTicketsPerEvent = tickets / receipts.length
+  res.json({
+    totalTicketsBought: receipts.length,
+    events: receipts.map((e) => e.eventName),
+    averageTicketsPerEvent,
+  });
 }
